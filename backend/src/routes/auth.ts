@@ -1,30 +1,63 @@
 // Handle user login logic
-
+import 'dotenv/config'
 import { Router, type Request, type Response } from "express";
-import { userLoginSchema, type userLogin } from "../types/loginType";
+import { userLoginSchema } from "../types/loginType";
 import prisma from "../db";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 const authRouter = Router();
 
-authRouter.post("/login", async (req: Request, res: Response)=>{
-    const {username, password}: userLogin = req.body;
-    const user = userLoginSchema.safeParse(req.body);
-    if(!user.success){
-        return res.status(401).json({
-            message: "Invalid inputs"
+authRouter.post("/login", async (req: Request, res: Response) => {
+    const secret: string = process.env.JWT_SECRET || "secret";
+    const jwtExpiry: string = process.env.JWT_EXPIRES_IN || '24h';
+
+    try {
+        const user = userLoginSchema.safeParse(req.body);
+
+        if (!user.success) {
+            return res.status(401).json({
+                message: "Invalid inputs"
+            })
+        }
+        const { username, password } = user.data;
+
+        // validate user
+        const existingUser = await prisma.user.findUnique({
+            where: { username }
+        })
+
+        if (!existingUser) {
+            return res.status(401).json({
+                message: "Invalid credentials"
+            })
+        }
+
+        const valid = await bcrypt.compare(password, existingUser.password);
+        if (!valid) {
+            return res.status(401).json({
+                message: "Invalid credentials"
+            })
+        }
+
+        // create auth token 
+        const token = jwt.sign(
+            { id: existingUser.id, username: existingUser.username },
+            secret,
+            { expiresIn: jwtExpiry as jwt.SignOptions["expiresIn"] }
+        )
+
+        return res.status(200).json({
+            message: "User login successfull",
+            token
         })
     }
-    //check if user is valid 
-    const validUser = await prisma.User.findOne({
-        username,
-        password
-    })
-    if(!validUser){
-        return res.status(404).json({
-            message: "User not found"
+    catch (err) {
+        console.error("Error during login: ", err);
+        return res.status(500).json({
+            message: "Internal server error"
         })
     }
-    //  create a tokena and send it
 })
 
 export default authRouter;
