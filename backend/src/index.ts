@@ -9,6 +9,8 @@ dotenv.config()
 const app = express();
 const PORT = process.env.PORT || 7002;
 
+app.use(express.json())
+
 app.use("/api/v1", mainRouter)
 
 

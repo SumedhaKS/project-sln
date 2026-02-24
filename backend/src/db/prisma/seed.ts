@@ -7,11 +7,11 @@ import prisma from "..";
 async function main() {
     try {
         const admin = await prisma.user.upsert({
-            where: {username: "admin"},
+            where: {username: "tester1"},
             update: {},
             create: {
-                username: "admin",
-                password: await bcrypt.hash('secretadmin', 10)
+                username: "tester1",
+                password: await bcrypt.hash('tester1', 10)
             },
         })
 
