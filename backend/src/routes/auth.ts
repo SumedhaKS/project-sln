@@ -1,7 +1,7 @@
 // Handle user login logic
 import 'dotenv/config'
 import { Router, type Request, type Response } from "express";
-import { userLoginSchema } from "../types/loginType";
+import { userLoginSchema } from "../types";
 import prisma from "../db";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";

@@ -1,7 +1,7 @@
 // Handle user creation logic
 import 'dotenv/config'
 import { Router, type Request, type Response } from "express";
-import { createUserSchema } from '../types/loginType';
+import { createUserSchema } from '../types';
 import prisma from '../db';
 import bcrypt from "bcrypt";
 
