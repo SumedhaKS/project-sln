@@ -14,36 +14,49 @@ datasource db {
 }
 
 model User {
-  id           Int        @id        @default(autoincrement())
-  username     String     @unique
-  password     String
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
 }
 
 model Customer {
-  id          String      @id        @default(uuid())
-  name        String
-  phNo        String      
-  address     String?  
-  
-  jobs        Job[]
+  id        String   @id @default(uuid())
+  name      String
+  phNo      String
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  jobs Job[]
+
+  @@index([name])
+  @@index([phNo])
 }
 
 model Job {
-  id                    String        @id         @default(uuid())
-  customer              Customer      @relation(fields: [customer_id], references: [id])
-  customer_id           String
-  camera_brand          String
-  camera_model          String
-  serial_number         String
-  accessories           String?
-  physical_condition    String?
-  status                jobStatus
+  id                String    @id @default(uuid())
+  jobID             String    @unique
+  customer          Customer  @relation(fields: [customerId], references: [id])
+  customerId        String
+  cameraBrand       String
+  cameraModel       String
+  serialNumber      String
+  accessories       String?
+  physicalCondition String?
+  notes             String?
+  status            jobStatus
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([customerId])
+  @@index([status])
 }
 
 enum jobStatus {
   pending
-  in_progress
+  inProgress
   ready
   delivered
   cancelled
