@@ -11,33 +11,93 @@ const customerRouter = Router();
 // POST  /cutsomer                   - add new customer
 // PUT   /customer:id                - update existing customer
 
-customerRouter.get("/details", authMiddleware, (req: AuthenticatedRequest, res: Response) => {
+customerRouter.get("/details", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     // fetch details of all customers
     // Implement pagination here, we will send 15 records at once. frontend will also display 15/page. 
+    try {
+        const page = Math.max(Number(req.query.page) || 1, 1);
+        const limit = Math.max(1, Math.min(Number(req.query.limit) || 15, 20));
+        const skip = (page - 1) * limit;
+        
+        const [customers, totalCount] = await Promise.all([
+            prisma.customer.findMany({
+                where: { isActive: true },
+                orderBy: { createdAt: "desc" },
+                skip,
+                take: limit,
+                select: {
+                    id: true,
+                    name: true,
+                    phNo: true,
+                    address: true,
+                    createdAt: true
+                }
+            }),
+            prisma.customer.count({
+                where: { isActive: true }
+            })
+        ])
 
-    if (typeof req.query.page !== "string" || typeof req.query.limit !== "string") {
-        return res.status(400).json({ message: "Invalid request" })
+        return res.status(200).json({
+            message: "Customers fetched successfully",
+            data: customers,
+            pagination: {
+                totalRecords: totalCount,
+                totalPages: Math.ceil(totalCount / limit),
+                currentPage: page,
+                pageSize: limit,
+                hasNextPage: ((page * limit) < totalCount)
+            }
+        })
     }
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 15;
-    const skip = (page - 1) * limit;
+    catch (err) {
+        console.error("Error while fetching customers: ", err);
+        return res.status(500).json({ message: "Internal Server Error" })
+    }
 
-    //  Pending
 })
 
 customerRouter.get("/details/:id", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-    // get the User's details with their Jobs in descending. (+ Payment history?)
-    const { id } = req.params;
-    if (!id || typeof id !== "string") return res.status(400).json({ message: "Invalid request" });
+    // get the User's details with their Jobs in descending. (+ Payment history? in future)
+    try {
+        const { id } = req.params;
+        if (!id || typeof id !== "string") return res.status(400).json({ message: "Invalid request" });
 
-    const customer = await prisma.customer.findUnique({
-        where: { id: id, AND: { isActive: true } },
-        select: { name: true, phNo: true, address: true }
-    });
-    // pending
+        const customer = await prisma.customer.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                phNo: true,
+                address: true,
+                isActive: true,
+                jobs: {
+                    where: { isActive: true },
+                    orderBy: { createdAt: "desc" },
+                    select: {
+                        jobID: true,
+                        cameraBrand: true,
+                        cameraModel: true,
+                        serialNumber: true,
+                        status: true,
+                        accessories: true,
+                        physicalCondition: true,
+                        notes: true,
+                        createdAt: true
+                    }
+                }
+            }
+        });
 
+        if (!customer || !customer.isActive) {
+            return res.status(404).json({ message: "Customer not found" })
+        }
 
-
+        return res.status(200).json({ message: "Customer details fetched successfully", details: customer })
+    } catch (err) {
+        console.error(`Error while fetching customer details: ${err}`);
+        return res.status(500).json({ message: "Internal server error" })
+    }
 })
 
 /*
@@ -69,7 +129,7 @@ customerRouter.post("/details", authMiddleware, async (req: AuthenticatedRequest
             }
             return res.status(409).json({ message: "Customer alreay exists" });
         }
-        
+
         await prisma.customer.create({
             data: {
                 name,
