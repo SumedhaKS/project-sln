@@ -58,7 +58,6 @@ adminRouter.post("/create-user", async (req: Request, res: Response) => {
 
     }
     catch (err) {
-        // standard error 500 Internal server error display
         console.error("Error while creating new user: ", err);
         return res.status(500).json({ message: "Internal server error" })
 

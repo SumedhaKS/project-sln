@@ -1,13 +1,14 @@
 import { Router } from "express";
 import authRouter from "./auth";
 import customerRouter from "./customers";
+import jobsRouter from "./jobs";
+import adminRouter from "./admin";
 
 const mainRouter = Router();
 
-mainRouter.use("/admin")
+mainRouter.use("/admin", adminRouter);
 mainRouter.use("/auth", authRouter);
 mainRouter.use("/customer", customerRouter);
-
-// should add customer and jobs routers
+mainRouter.use("/job", jobsRouter);
 
 export default mainRouter;
