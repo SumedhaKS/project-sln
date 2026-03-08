@@ -6,12 +6,12 @@ import prisma from "../db";
 
 const customerRouter = Router();
 
-// GET   /customer/details           - fetch all / some customers
-// GET   /customer:id                - get details of a particular customer 
-// POST  /cutsomer                   - add new customer
-// PUT   /customer:id                - update existing customer
+// GET   /customer/bulk                      - fetch all / some customers
+// GET   /customer/details/:id               - get details of a particular customer 
+// POST  /cutsomer/details                   - add new customer
+// PUT   /customer/details/:id               - update existing customer
 
-customerRouter.get("/details", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+customerRouter.get("/bulk", authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
     // fetch details of all customers
     // Implement pagination here, we will send 15 records at once. frontend will also display 15/page. 
     try {
