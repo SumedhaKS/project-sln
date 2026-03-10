@@ -35,7 +35,7 @@ model Customer {
 
 model Job {
   id                String    @id @default(uuid())
-  jobID             String    @unique
+  jobNumber         Int       @unique @default(autoincrement())
   customer          Customer  @relation(fields: [customerId], references: [id])
   customerId        String
   cameraBrand       String
