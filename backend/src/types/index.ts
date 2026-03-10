@@ -22,3 +22,15 @@ export interface Customer {
     phNo: string;
     address?: string;
 }
+
+export const jobSchema = zod.object({
+    customerID: zod.uuid(),
+    cameraBrand: zod.string().max(100),
+    cameraModel: zod.string().max(100),
+    serialNumber: zod.string().max(100),
+    accessories: zod.string().max(100).optional(),
+    physicalCondition: zod.string().max(100).optional(),
+    notes: zod.string().max(100).optional()
+})
+
+export type JobInput = zod.infer<typeof jobSchema>;
