@@ -34,3 +34,18 @@ export const jobSchema = zod.object({
 })
 
 export type JobInput = zod.infer<typeof jobSchema>;
+
+export const jobIdParamSchema = zod.object({ id: zod.uuid() });
+
+export const jobStatusSchema = zod.enum(["pending", "inProgress", "ready", "delivered", "cancelled"]);
+export type JobStatus = zod.infer<typeof jobStatusSchema>;
+
+export const jobUpdateSchema = jobSchema
+    .omit({ customerID: true })
+    .partial()
+    .extend({
+        status: jobStatusSchema.optional()
+    })
+    .refine((data) => Object.keys(data).length > 0, { message: "No fields to update" });
+
+export type JobUpdateInput = zod.infer<typeof jobUpdateSchema>;
