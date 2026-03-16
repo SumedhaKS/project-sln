@@ -18,7 +18,7 @@ customerRouter.get("/bulk", authMiddleware, async (req: AuthenticatedRequest, re
         const page = Math.max(Number(req.query.page) || 1, 1);
         const limit = Math.max(1, Math.min(Number(req.query.limit) || 15, 20));
         const skip = (page - 1) * limit;
-        
+
         const [customers, totalCount] = await Promise.all([
             prisma.customer.findMany({
                 where: { isActive: true },
@@ -75,7 +75,7 @@ customerRouter.get("/details/:id", authMiddleware, async (req: AuthenticatedRequ
                     where: { isActive: true },
                     orderBy: { createdAt: "desc" },
                     select: {
-                        jobID: true,
+                        jobNumber: true,
                         cameraBrand: true,
                         cameraModel: true,
                         serialNumber: true,
@@ -93,7 +93,29 @@ customerRouter.get("/details/:id", authMiddleware, async (req: AuthenticatedRequ
             return res.status(404).json({ message: "Customer not found" })
         }
 
-        return res.status(200).json({ message: "Customer details fetched successfully", details: customer })
+        const jobs = customer.jobs.map((job) => ({
+            jobID: `JB${String(job.jobNumber).padStart(6, "0")}`,
+            cameraBrand: job.cameraBrand,
+            cameraModel: job.cameraModel,
+            serialNumber: job.serialNumber,
+            status: job.status,
+            accessories: job.accessories,
+            physicalCondition: job.physicalCondition,
+            notes: job.notes,
+            createdAt: job.createdAt
+        }))
+
+        return res.status(200).json({
+            message: "Customer details fetched successfully",
+            details: {
+                id: customer.id,
+                name: customer.name,
+                phNo: customer.phNo,
+                address: customer.address,
+                jobs
+            }
+
+        })
     } catch (err) {
         console.error(`Error while fetching customer details: ${err}`);
         return res.status(500).json({ message: "Internal server error" })
